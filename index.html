@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>听见朋友 - 盲障碍社交 App</title>
+  <style>
+    :root {
+      --bg: #f7efe4;
+      --bg-soft: #fff8f1;
+      --ink: #1f1a17;
+      --muted: #6f6258;
+      --line: rgba(31, 26, 23, 0.1);
+      --card: rgba(255, 251, 246, 0.92);
+      --accent: #ff7a45;
+      --accent-deep: #d65929;
+      --accent-soft: #ffd8c8;
+      --green: #2f8f69;
+      --blue: #2d6cdf;
+      --shadow: 0 24px 60px rgba(68, 37, 22, 0.15);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 149, 92, 0.26), transparent 32%),
+        radial-gradient(circle at 85% 15%, rgba(255, 217, 162, 0.55), transparent 20%),
+        linear-gradient(180deg, #fdf8f2 0%, #f4ecdf 100%);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.22) 1px, transparent 1px);
+      background-size: 30px 30px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 65%);
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .hero-card,
+    .phone,
+    .feature-card,
+    .wide-card {
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card {
+      border-radius: 36px;
+      padding: 34px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      width: 230px;
+      height: 230px;
+      right: -70px;
+      top: -70px;
+      background: radial-gradient(circle, rgba(255, 122, 69, 0.23), transparent 68%);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 122, 69, 0.12);
+      color: var(--accent-deep);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    .hero-title {
+      margin-top: 18px;
+      font-size: clamp(34px, 6vw, 58px);
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+      max-width: 9ch;
+    }
+
+    .hero-text {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+      max-width: 42ch;
+    }
+
+    .hero-points {
+      margin-top: 26px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .point {
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid var(--line);
+    }
+
+    .point strong {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .point span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    .primary-btn,
+    .secondary-btn,
+    .nav-pill,
+    .topic-chip,
+    .mini-action {
+      border-radius: 999px;
+      padding: 14px 18px;
+      font-weight: 700;
+    }
+
+    .primary-btn {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 12px 26px rgba(214, 89, 41, 0.28);
+    }
+
+    .secondary-btn {
+      background: white;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .phone {
+      border-radius: 38px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      min-height: 720px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.2));
+      pointer-events: none;
+    }
+
+    .phone-shell {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      border-radius: 30px;
+      background:
+        radial-gradient(circle at top right, rgba(255, 122, 69, 0.16), transparent 30%),
+        linear-gradient(180deg, #fffdf8, #f8f3eb);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+
+    .status {
+      display: flex;
+      justify-content: space-between;
+      padding: 18px 22px 10px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .app-head {
+      padding: 8px 22px 18px;
+      border-bottom: 1px solid rgba(31, 26, 23, 0.06);
+    }
+
+    .app-head small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .app-head h2 {
+      font-size: 28px;
+      letter-spacing: -0.04em;
+    }
+
+    .nav-row {
+      display: flex;
+      gap: 10px;
+      padding: 16px 18px 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .nav-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-pill {
+      flex: 0 0 auto;
+      background: rgba(255, 255, 255, 0.84);
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      color: var(--muted);
+      padding-inline: 16px;
+    }
+
+    .nav-pill.active {
+      background: var(--ink);
+      color: white;
+      box-shadow: 0 12px 22px rgba(31, 26, 23, 0.18);
+    }
+
+    .screen-wrap {
+      padding: 16px 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow: auto;
+      min-height: 0;
+    }
+
+    .screen {
+      display: none;
+      animation: fadeUp 240ms ease;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .audio-card,
+    .list-card,
+    .safety-card,
+    .meeting-card,
+    .event-card,
+    .chat-card {
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(31, 26, 23, 0.08);
+      padding: 16px;
+    }
+
+    .audio-top,
+    .line-between {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .audio-visual {
+      margin-top: 12px;
+      height: 60px;
+      border-radius: 18px;
+      background:
+        linear-gradient(90deg,
+          rgba(255, 122, 69, 0.2) 0%,
+          rgba(255, 122, 69, 0.75) 14%,
+          rgba(45, 108, 223, 0.45) 30%,
+          rgba(47, 143, 105, 0.45) 48%,
+          rgba(255, 122, 69, 0.8) 68%,
+          rgba(255, 122, 69, 0.18) 100%);
+      mask-image: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 14px);
+    }
+
+    .audio-actions,
+    .quick-row,
+    .topic-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .mini-action,
+    .topic-chip {
+      background: #fff6ef;
+      color: var(--accent-deep);
+      padding: 11px 14px;
+    }
+
+    .topic-chip.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .helper-text,
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .person-row,
+    .chat-row,
+    .event-row,
+    .safety-row,
+    .meeting-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 0;
+    }
+
+    .person-row + .person-row,
+    .chat-row + .chat-row,
+    .event-row + .event-row,
+    .safety-row + .safety-row,
+    .meeting-row + .meeting-row {
+      border-top: 1px solid rgba(31, 26, 23, 0.08);
+    }
+
+    .avatar,
+    .icon-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .avatar {
+      background: linear-gradient(135deg, #ffd2c0, #fff3d2);
+    }
+
+    .icon-badge {
+      background: #fce8de;
+      color: var(--accent-deep);
+    }
+
+    .row-copy {
+      flex: 1;
+    }
+
+    .row-copy strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 16px;
+    }
+
+    .row-copy span {
+      display: block;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .tag {
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(47, 143, 105, 0.12);
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .chat-bubble {
+      margin-top: 10px;
+      border-radius: 18px;
+      padding: 12px 14px;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .chat-bubble.me {
+      background: #fff0e8;
+    }
+
+    .chat-bubble.them {
+      background: #f2f5ff;
+    }
+
+    .bars {
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      gap: 4px;
+      height: 34px;
+      align-items: end;
+      margin-top: 10px;
+    }
+
+    .bars span {
+      display: block;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff9b70, #ff6e36);
+      animation: pulse 1.6s ease-in-out infinite;
+      transform-origin: bottom center;
+    }
+
+    .bars span:nth-child(3n) {
+      background: linear-gradient(180deg, #5e8cf0, #2d6cdf);
+      animation-delay: 120ms;
+    }
+
+    .bars span:nth-child(4n) {
+      background: linear-gradient(180deg, #74bc9d, #2f8f69);
+      animation-delay: 200ms;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scaleY(0.65); opacity: 0.7; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+
+    .grid {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card,
+    .wide-card {
+      border-radius: 30px;
+      padding: 28px;
+    }
+
+    .feature-card {
+      grid-column: span 4;
+    }
+
+    .wide-card {
+      grid-column: span 6;
+    }
+
+    .feature-card h3,
+    .wide-card h3 {
+      font-size: 26px;
+      margin-bottom: 10px;
+      letter-spacing: -0.03em;
+    }
+
+    .feature-card p,
+    .wide-card p {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .steps {
+      margin-top: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .step {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.64);
+      border: 1px solid var(--line);
+    }
+
+    .step strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 15px;
+    }
+
+    .timeline {
+      margin-top: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .time-row {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .time {
+      color: var(--accent-deep);
+      font-weight: 800;
+      padding-top: 4px;
+    }
+
+    .time-copy {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.64);
+      border: 1px solid var(--line);
+    }
+
+    .footer-note {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    .highlight {
+      color: var(--accent-deep);
+      font-weight: 700;
+    }
+
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .phone {
+        min-height: 660px;
+      }
+
+      .feature-card,
+      .wide-card {
+        grid-column: span 12;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100% - 20px, 1180px);
+        padding-top: 20px;
+      }
+
+      .hero-card {
+        padding: 24px;
+      }
+
+      .hero-points {
+        grid-template-columns: 1fr;
+      }
+
+      .phone {
+        min-height: 620px;
+      }
+
+      .time-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <article class="hero-card">
+        <div class="badge">听见朋友 · 让社交更轻松</div>
+        <h1 class="hero-title">帮助盲人更自然地认识人、聊天、相约见面</h1>
+        <p class="hero-text">
+          这个前端页面把你想做的功能都放进来了：先听对方介绍，再开始聊天；聊天不怕冷场；活动和见面信息更清楚；遇到不舒服的人也能马上保护自己。
+        </p>
+        <div class="hero-points">
+          <div class="point">
+            <strong>先听后聊</strong>
+            <span>用声音认识彼此，减少尴尬和压力。</span>
+          </div>
+          <div class="point">
+            <strong>不怕冷场</strong>
+            <span>随时给出可直接开口的话题建议。</span>
+          </div>
+          <div class="point">
+            <strong>更安心</strong>
+            <span>见面提醒、位置分享、拉黑举报都很顺手。</span>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <button class="primary-btn" data-jump="discover">看看找朋友</button>
+          <button class="secondary-btn" data-jump="safety">查看安全页</button>
+        </div>
+      </article>
+
+      <section class="phone" aria-label="App 页面预览">
+        <div class="phone-shell">
+          <div class="status">
+            <span>9:41</span>
+            <span>声音模式已开</span>
+          </div>
+          <div class="app-head">
+            <small>今天适合认识新朋友</small>
+            <h2>听见朋友</h2>
+          </div>
+
+          <div class="nav-row">
+            <button class="nav-pill active" data-screen="discover">找朋友</button>
+            <button class="nav-pill" data-screen="chat">聊天</button>
+            <button class="nav-pill" data-screen="events">活动</button>
+            <button class="nav-pill" data-screen="meeting">见面</button>
+            <button class="nav-pill" data-screen="safety">保护</button>
+          </div>
+
+          <div class="screen-wrap">
+            <section class="screen active" id="discover">
+              <div class="audio-card">
+                <div class="audio-top">
+                  <div>
+                    <strong>本周推荐</strong>
+                    <p class="helper-text">先听 30 秒声音介绍，再决定要不要打招呼。</p>
+                  </div>
+                  <span class="tag">声音优先</span>
+                </div>
+                <div class="audio-visual" aria-hidden="true"></div>
+                <div class="audio-actions">
+                  <button class="mini-action">播放介绍</button>
+                  <button class="mini-action">一句话招呼</button>
+                  <button class="mini-action">收藏</button>
+                </div>
+              </div>
+
+              <div class="list-card">
+                <div class="line-between">
+                  <strong>和你可能聊得来的人</strong>
+                  <span class="muted">同城</span>
+                </div>
+                <div class="person-row">
+                  <div class="avatar">林</div>
+                  <div class="row-copy">
+                    <strong>林夕，29 岁</strong>
+                    <span>喜欢散步、播客和安静聊天。她刚刚发了一段自我介绍。</span>
+                  </div>
+                  <span class="tag">92% 合拍</span>
+                </div>
+                <div class="person-row">
+                  <div class="avatar">周</div>
+                  <div class="row-copy">
+                    <strong>周野，31 岁</strong>
+                    <span>想找一起听歌、周末喝咖啡的朋友，语气很温和。</span>
+                  </div>
+                  <span class="tag">新加入</span>
+                </div>
+                <div class="person-row">
+                  <div class="avatar">安</div>
+                  <div class="row-copy">
+                    <strong>安然，27 岁</strong>
+                    <span>喜欢小动物和城市漫步，最近在参加同城读书活动。</span>
+                  </div>
+                  <span class="tag">附近 2km</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="screen" id="chat">
+              <div class="chat-card">
+                <div class="line-between">
+                  <div>
+                    <strong>和林夕聊天中</strong>
+                    <p class="helper-text">来消息时先告诉你：是谁、说了什么、要不要现在回。</p>
+                  </div>
+                  <span class="tag">语音聊天</span>
+                </div>
+                <div class="chat-bubble them">林夕：我也喜欢晚上散步，你平时会去江边吗？</div>
+                <div class="chat-bubble me">你：会呀，我喜欢风大一点的时候，听起来很放松。</div>
+                <div class="bars" aria-hidden="true">
+                  <span style="height: 30%;"></span><span style="height: 62%;"></span><span style="height: 48%;"></span><span style="height: 78%;"></span><span style="height: 40%;"></span>
+                  <span style="height: 72%;"></span><span style="height: 34%;"></span><span style="height: 82%;"></span><span style="height: 42%;"></span><span style="height: 66%;"></span>
+                  <span style="height: 38%;"></span><span style="height: 70%;"></span><span style="height: 46%;"></span><span style="height: 84%;"></span><span style="height: 58%;"></span>
+                  <span style="height: 74%;"></span><span style="height: 32%;"></span><span style="height: 64%;"></span><span style="height: 44%;"></span><span style="height: 76%;"></span>
+                </div>
+              </div>
+
+              <div class="list-card">
+                <strong>不冷场建议</strong>
+                <div class="topic-row">
+                  <button class="topic-chip active">你最近常听什么？</button>
+                  <button class="topic-chip">你喜欢热闹还是安静？</button>
+                  <button class="topic-chip">周末一般怎么放松？</button>
+                </div>
+                <p class="helper-text" id="topic-copy">你可以顺着对方的声音习惯和生活方式聊，开口会更自然。</p>
+              </div>
+
+              <div class="list-card">
+                <strong>快捷回复</strong>
+                <div class="quick-row">
+                  <button class="mini-action">我也这样</button>
+                  <button class="mini-action">想听你多讲一点</button>
+                  <button class="mini-action">我们可以约时间聊聊</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="screen" id="events">
+              <div class="event-card">
+                <div class="line-between">
+                  <div>
+                    <strong>同城轻松活动</strong>
+                    <p class="helper-text">先从小圈子开始，更容易认识人。</p>
+                  </div>
+                  <span class="tag">本周 6 场</span>
+                </div>
+                <div class="event-row">
+                  <div class="icon-badge">声</div>
+                  <div class="row-copy">
+                    <strong>声音交友小组</strong>
+                    <span>今晚 20:00，线上。每人 2 分钟介绍自己，再自由聊天。</span>
+                  </div>
+                </div>
+                <div class="event-row">
+                  <div class="icon-badge">读</div>
+                  <div class="row-copy">
+                    <strong>周末读书散步</strong>
+                    <span>周六 16:00，线下。有人带路，集合和结束地点都说得很清楚。</span>
+                  </div>
+                </div>
+                <div class="event-row">
+                  <div class="icon-badge">歌</div>
+                  <div class="row-copy">
+                    <strong>一起听歌聊天房</strong>
+                    <span>周日 21:00，线上。先听歌，再聊最近想分享的事。</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="screen" id="meeting">
+              <div class="meeting-card">
+                <div class="line-between">
+                  <div>
+                    <strong>第一次见面提醒</strong>
+                    <p class="helper-text">把时间、地点、路线和联系人说清楚。</p>
+                  </div>
+                  <span class="tag">更安心</span>
+                </div>
+                <div class="meeting-row">
+                  <div class="icon-badge">时</div>
+                  <div class="row-copy">
+                    <strong>周六 15:30</strong>
+                    <span>提前 1 小时提醒，提前 20 分钟再次提醒。</span>
+                  </div>
+                </div>
+                <div class="meeting-row">
+                  <div class="icon-badge">地</div>
+                  <div class="row-copy">
+                    <strong>人民公园南门咖啡店</strong>
+                    <span>入口、台阶、门店方向都能提前听到说明。</span>
+                  </div>
+                </div>
+                <div class="meeting-row">
+                  <div class="icon-badge">人</div>
+                  <div class="row-copy">
+                    <strong>一键发给信任的人</strong>
+                    <span>见面对象、时间、地点都能分享，结束后可报平安。</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="screen" id="safety">
+              <div class="safety-card">
+                <div class="line-between">
+                  <div>
+                    <strong>你的边界最重要</strong>
+                    <p class="helper-text">不舒服的时候，不需要犹豫。</p>
+                  </div>
+                  <span class="tag">随手可达</span>
+                </div>
+                <div class="safety-row">
+                  <div class="icon-badge">停</div>
+                  <div class="row-copy">
+                    <strong>一键静音和结束聊天</strong>
+                    <span>不想继续时，可以马上停下，不让对方再打扰。</span>
+                  </div>
+                </div>
+                <div class="safety-row">
+                  <div class="icon-badge">黑</div>
+                  <div class="row-copy">
+                    <strong>拉黑和举报</strong>
+                    <span>过程简单直接，还能选“骚扰”“冒犯”“虚假身份”等原因。</span>
+                  </div>
+                </div>
+                <div class="safety-row">
+                  <div class="icon-badge">助</div>
+                  <div class="row-copy">
+                    <strong>紧急求助</strong>
+                    <span>见面中如果不安，可以快速通知信任的人并发送位置。</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="grid">
+      <article class="feature-card">
+        <h3>认识人</h3>
+        <p>先听声音介绍，再决定要不要聊。这样比只看资料更自然，也更适合这个产品的方向。</p>
+        <div class="steps">
+          <div class="step">
+            <strong>1. 推荐合适的人</strong>
+            按兴趣、城市和聊天感觉来推荐。
+          </div>
+          <div class="step">
+            <strong>2. 一句招呼就能开始</strong>
+            不用打很多字，轻松迈出第一步。
+          </div>
+        </div>
+      </article>
+
+      <article class="feature-card">
+        <h3>聊天</h3>
+        <p>聊天要轻一点、暖一点，来消息时也要先说清楚重点，让人不慌张。</p>
+        <div class="steps">
+          <div class="step">
+            <strong>谁发来的</strong>
+            先告诉用户是谁发的消息。
+          </div>
+          <div class="step">
+            <strong>说了什么</strong>
+            再说消息内容，并给出是否现在回复的提示。
+          </div>
+        </div>
+      </article>
+
+      <article class="feature-card">
+        <h3>安全</h3>
+        <p>保护功能要明显、近、快。真正不舒服的时候，不能让人找很久。</p>
+        <div class="steps">
+          <div class="step">
+            <strong>聊天保护</strong>
+            陌生人限制、拉黑、举报一眼就能找到。
+          </div>
+          <div class="step">
+            <strong>见面保护</strong>
+            一键分享行程，结束后报平安。
+          </div>
+        </div>
+      </article>
+
+      <article class="wide-card">
+        <h3>一次完整的社交流程</h3>
+        <p>从认识到见面，页面已经把主要路径串起来了。你后面可以直接在这个基础上继续加登录、个人资料、消息列表这些内容。</p>
+        <div class="timeline">
+          <div class="time-row">
+            <div class="time">先认识</div>
+            <div class="time-copy">听 30 秒自我介绍，收藏喜欢的人，用一句轻松的话开始打招呼。</div>
+          </div>
+          <div class="time-row">
+            <div class="time">再聊天</div>
+            <div class="time-copy">以语音为主，同时给出开场建议和快捷回复，减少冷场和压力。</div>
+          </div>
+          <div class="time-row">
+            <div class="time">小圈子</div>
+            <div class="time-copy">先参加线上房间或同城活动，比直接私聊更容易熟起来。</div>
+          </div>
+          <div class="time-row">
+            <div class="time">去见面</div>
+            <div class="time-copy">见面前把时间、地点和提醒都安排清楚，需要时随时分享给信任的人。</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="wide-card">
+        <h3>适合你下一步继续加的内容</h3>
+        <p>这个页面现在偏向“展示想法 + 交互草稿”。如果你准备继续做成真页面，建议先补这几块。</p>
+        <div class="steps">
+          <div class="step">
+            <strong>个人页</strong>
+            放自我介绍、兴趣、声音介绍和交友期待。
+          </div>
+          <div class="step">
+            <strong>消息列表</strong>
+            把最近谁来过消息、谁邀请活动、谁约见面放在一起。
+          </div>
+          <div class="step">
+            <strong>设置页</strong>
+            管理提醒、隐私、陌生人范围和紧急联系人。
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <p class="footer-note">
+      页面文件已经可直接打开使用。<span class="highlight">适合先拿去讲产品、演示方向，或者继续接着改成正式页面。</span>
+    </p>
+  </main>
+
+  <script>
+    const tabs = document.querySelectorAll('.nav-pill');
+    const screens = document.querySelectorAll('.screen');
+    const jumpButtons = document.querySelectorAll('[data-jump]');
+    const chips = document.querySelectorAll('.topic-chip');
+    const topicCopy = document.getElementById('topic-copy');
+
+    function showScreen(name) {
+      tabs.forEach((tab) => {
+        tab.classList.toggle('active', tab.dataset.screen === name);
+      });
+
+      screens.forEach((screen) => {
+        screen.classList.toggle('active', screen.id === name);
+      });
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => showScreen(tab.dataset.screen));
+    });
+
+    jumpButtons.forEach((button) => {
+      button.addEventListener('click', () => showScreen(button.dataset.jump));
+    });
+
+    const chipNotes = {
+      '你最近常听什么？': '从日常习惯开始最轻松，容易让对方马上接住你的话。',
+      '你喜欢热闹还是安静？': '这个问题很适合慢慢聊到性格和舒服的相处方式。',
+      '周末一般怎么放松？': '顺着对方的生活节奏聊，后面也更容易自然约活动。'
+    };
+
+    chips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        chips.forEach((item) => item.classList.remove('active'));
+        chip.classList.add('active');
+        topicCopy.textContent = chipNotes[chip.textContent] || '';
+      });
+    });
+  </script>
+</body>
+</html>
